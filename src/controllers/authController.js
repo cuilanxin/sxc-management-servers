@@ -13,7 +13,6 @@ const generateToken = (id) => {
 const updateUser = async (req, res) => {
   const username = req.headers['x-username']
   const id = req.headers['x-id']
-  console.log('cuilanxin req', username, id)
   const currentDate = getCurrentDate()
   // 密码 是否在线 注销、登录、退出、时间
   try {

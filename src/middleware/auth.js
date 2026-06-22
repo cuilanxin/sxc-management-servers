@@ -7,11 +7,14 @@ const protect = async (req, res, next) => {
         // 'X-id': id,
   const username = req.headers['x-username']
   const id = req.headers['x-id']
+  const authorization = req.headers.authorization
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer') && id && username) {
+  if (authorization && authorization.startsWith('Bearer') && id && username) {
     try {
-      token = req.headers.authorization.split(' ')[1];
+      token = authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('cuilanxin token', token, decoded)
+
       req.user = await User.findById(decoded.id).select('-password');
       next();
     } catch (error) {

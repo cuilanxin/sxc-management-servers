@@ -12,13 +12,13 @@ const router = express.Router();
 
 router.use(protect); // 所有产品路由都需要认证
 
-router.route('/')
-  .get(getTasks)
-  .post(createTask);
+router.post('/getTasks', protect, getTasks);
+router.post('/createTask', protect, createTask);
 
-router.route('/:id')
-  .get(getTaskById)
-  .put(updateTask)
-  .delete(deleteTask);
+router.post('/getTaskById', protect, getTaskById);
+router.post('/updateTask', protect, updateTask);
+
+router.post('/deleteTask', protect, deleteTask);
+
 
 module.exports = router;
