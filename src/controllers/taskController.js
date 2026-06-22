@@ -1,7 +1,6 @@
 const Task = require('../models/Task');
 const User = require('../models/User')
-// import { TASK_STATUS } from '../models/Task'
-// const { TASK_STATUS } = require('../models/Task');
+const { TASK_STATUS } = require('../utils')
 const { apiResponse, getCurrentDate } = require('../utils')
 const mongoose = require('mongoose');
 
@@ -12,7 +11,6 @@ const getUserInfo = async (username) => {
 
 // 创建产品
 const createTask = async (req, res) => {
-  const User = require('../models/User');
 
   const username = req.headers['x-username']
   const currentDate = getCurrentDate()
@@ -36,31 +34,49 @@ const createTask = async (req, res) => {
 // 获取所有产品
 const getTasks = async (req, res) => {
   try {
-     const { keyword } = req.query;
-      const {taskName, ...filter} = req.body ||  {};
+      const { taskName, createdAt, downAt, deadlineAt, ...filter} = req.body ||  {};
     
     // 构建查询条件
     let query = { ...filter };
 
-
-     
-    // const query = { userId: req.user._id };  // 如果有用户隔离
-    
-    // if (keyword && keyword.trim()) {
-    //   const trimmedKeyword = keyword.trim();
+        // 时间范围过滤
+    if (createdAt) {
+      query.createdAt = {};
       
-    //   // 同时匹配 ID（精准）和 name（模糊）
-    //   query.$or = [
-    //     { id: trimmedKeyword },  // 精准匹配 ID（完全相等）
-    //     { name: { $regex: trimmedKeyword, $options: 'i' } }  // 模糊匹配 name
-    //   ];
-    // }
+      if (createdAt[0]) {
+        query.createdAt.$gte = createdAt[0];
+      }
+      if (createdAt[1]) {
+        query.createdAt.$lte = createdAt[1];
+      }
+    }
 
-    
+    if (deadlineAt) {
+      query.createdAt = {};
+      
+      if (deadlineAt[0]) {
+        query.deadlineAt.$gte = deadlineAt[0];
+      }
+      if (deadlineAt[1]) {
+        query.deadlineAt.$lte = deadlineAt[1];
+      }
+    }
+
+    if (downAt) {
+      query.createdAt = {};
+      
+      if (downAt[0]) {
+        query.downAt.$gte = downAt[0];
+      }
+      if (downAt[1]) {
+        query.downAt.$lte = downAt[1];
+      }
+    }
+
     // 模糊搜索：标题或描述包含关键词
-    if (keyword) {
+    if (taskName) {
       query.$or = [
-        { taskName: { $regex: keyword, $options: 'i' } },        // 标题模糊匹配
+        { taskName: { $regex: taskName, $options: 'i' } },        // 标题模糊匹配
         // { description: { $regex: taskName, $options: 'i' } }   // 描述模糊匹配
       ];
     }
@@ -101,7 +117,7 @@ const updateTask = async (req, res) => {
       { 
         ...req.body, 
         updatedAt: currentDate,
-        downAt: req.body.taskStatus === 'COMPLETED' ? currentDate : null
+        downAt: req.body.taskStatus === TASK_STATUS.COMPLETED ? currentDate : null
       },
       { new: true, runValidators: true }
     );

@@ -1,37 +1,8 @@
 // const Counter = require('./Counter');
 // import mongoose from 'mongoose'
 const mongoose = require('mongoose');
+const { TASK_STATUS } = require('../utils')
 
-const TASK_STATUS = {
-  /**
-   * 未完成
-   */
-  UNFINISHED: 'UNFINISHED',
-  /**
-   * 已完成
-   */
-  COMPLETED: 'COMPLETED',
-  // /**
-  //  * 未指派
-  //  */
-  // UNASSIGNED: 'UNASSIGNED',
-  // /**
-  //  * 已指派
-  //  */
-  // ASSIGNED: 'ASSIGNED',
-  /**
-   * 未确认
-   */
-  UNCONFIRMED: 'UNCONFIRMED',
-  // /**
-  //  * 已确认
-  //  */
-  // CONFIRMED: 'CONFIRMED',
-  /**
-   * 废弃 abolish
-   */
-  ABOLISH: 'ABOLISH',
-}
 
 const taskSchema = new mongoose.Schema({
   id: { // 任务ID  时间戳

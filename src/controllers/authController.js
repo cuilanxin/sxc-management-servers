@@ -1,6 +1,7 @@
 const User = require('../models/User');
+const Task = require('../models/Task');
 const jwt = require('jsonwebtoken');
-const { apiResponse, getCurrentDate } = require('../utils')
+const { apiResponse, getCurrentDate, TASK_STATUS } = require('../utils')
 const mongoose = require('mongoose');
 
 const generateToken = (id) => {
@@ -9,6 +10,32 @@ const generateToken = (id) => {
   });
 };
 
+const getUserTaskInfo = async (username) => {
+  const recipientList = await Task.find({ recipientId: username})
+  const createOwnerList = await Task.find({ createOwnerId: username})
+
+  let taskUnfinishedNum = 0 // 任务未完成的
+  let taskUnConfirmedNum = 0// 任务未确认的
+  let taskConfirmedNum = 0 // 任务已完成的
+  recipientList.forEach(item => {
+    if (item.taskStatus === TASK_STATUS.UNFINISHED) {
+      taskUnfinishedNum+=1
+    }
+    if (item.taskStatus === TASK_STATUS.UNCONFIRMED) {
+      taskUnConfirmedNum+=1
+    }
+    if (item.taskStatus === TASK_STATUS.COMPLETED) {
+      taskConfirmedNum+=1
+    }
+  })
+  return {
+    taskNum: recipientList.length + createOwnerList.length,
+    taskCreateNum: createOwnerList.length,
+    taskUnfinishedNum,
+    taskUnConfirmedNum,
+    taskConfirmedNum,
+  }
+}
 
 const exitUser = async(req, res) => {
   const username = req.headers['x-username']
@@ -86,23 +113,41 @@ const updateUser = async (req, res) => {
 // 获取所有
 const getUsers = async (req, res) => {
   try {
-     const { keyword } = req.query;
-      const { name, ...filter } = req.body ||  {};
+      const { name, registerAt, ...filter } = req.body ||  {};
     
     // 构建查询条件
     let query = { ...filter };
     
     // 模糊搜索：标题或描述包含关键词
-    if (keyword) {
+    if (name) {
       query.$or = [
-        { name: { $regex: keyword, $options: 'i' } },        // 标题模糊匹配
+        { name: { $regex: name, $options: 'i' } },        // 标题模糊匹配
         // { description: { $regex: taskName, $options: 'i' } }   // 描述模糊匹配
       ];
     }
 
-    const users = await User.find({ ...query });
+    // 时间范围过滤
+    if (registerAt) {
+      query.registerAt = {};
+      
+      if (registerAt[0]) {
+        query.registerAt.$gte = registerAt[0]+' 00:00:00';
+      }
+      if (registerAt[1]) {
+        query.registerAt.$lte = registerAt[1]+' 23:59:59';
+      }
+    }
+
+    let users = await User.find({ ...query });
+    const list = await Promise.all(users.map(async (it)=>{
+      const plainIt = it.toObject();
+      const taskInfo = await getUserTaskInfo(plainIt.username);
+      return {...plainIt, ...taskInfo,  }
+    }))
+    // users = users.map(it=>())
+    console.log('cuilanxin users', list)
     // : tasks.filter(item => !item.isDelete)
-    res.json(apiResponse({ users }));
+    res.json(apiResponse({ users: list }));
   } catch (error) {
     res.status(500).json(apiResponse({ code: 500, message: error.message }));
   }

@@ -65,16 +65,24 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  taskNum: {
-    type: String,
+  taskNum: { //任务数量
+    type: Number,
     default: 0
   },
-  taskNum: {
-    type: String,
+  taskCreateNum: {
+    type: Number,
     default: 0
   },
-  taskNum: {
-    type: String,
+  taskUnfinishedNum: {// 任务未完成的
+    type: Number,
+    default: 0
+  },
+  taskUnConfirmedNum: {// 任务未确认的
+    type: Number,
+    default: 0
+  },
+    taskConfirmedNum: {// 任务已完成的
+    type: Number,
     default: 0
   },
 }, {
