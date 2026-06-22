@@ -3,8 +3,12 @@ const User = require('../models/User');
 
 const protect = async (req, res, next) => {
   let token;
+        // 'X-username': username,
+        // 'X-id': id,
+  const username = req.headers['x-username']
+  const id = req.headers['x-id']
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer') && id && username) {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);

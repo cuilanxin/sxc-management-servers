@@ -11,11 +11,18 @@ const generateToken = (id) => {
 
 
 const updateUser = async (req, res) => {
+  const username = req.headers['x-username']
+  const id = req.headers['x-id']
+  console.log('cuilanxin req', username, id)
+  const currentDate = getCurrentDate()
   // 密码 是否在线 注销、登录、退出、时间
   try {
     const product = await User.findOneAndUpdate(
-      { username: req.params.username, userId: req.user._id },
-      req.body,
+      { username: username, _id: id },
+      {
+        ...req.body,
+        exitAt: currentDate
+      },
       { new: true, runValidators: true }
     );
 
@@ -23,7 +30,7 @@ const updateUser = async (req, res) => {
       return res.status(404).json(apiResponse({ code: 404 }));
     }
 
-    res.json(product);
+    res.json(apiResponse());
   } catch (error) {
     res.status(400).json(apiResponse({ code: 400, message: error.message }));
   }
@@ -86,19 +93,19 @@ const login = async (req, res, next) => {
       }));
     }
 
-    if (!forceLogin && user.isOnline) {
-      return res.status(401).json(apiResponse({
-        code: 401,
-        message: '账号已登录'
-      }));
-    }
+    // if (!forceLogin && user.isOnline) {
+    //   return res.status(401).json(apiResponse({
+    //     code: 401,
+    //     message: '账号已登录'
+    //   }));
+    // }
 
     const currentDate = getCurrentDate()
 
     await User.findOneAndUpdate(
       { username },
       {
-        // isOnline: true,
+        isOnline: true,
         exitAt: forceLogin ? currentDate : user.exitAt,
         loginAt: currentDate,
       },

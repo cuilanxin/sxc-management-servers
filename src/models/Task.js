@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const Counter = require('./Counter');
+
+
 
 const taskSchema = new mongoose.Schema({
-  name: {
+  id: { // 任务ID  时间戳
     type: String,
-    required: [true, 'Product name is required'],
-    trim: true
   },
   price: {
     type: Number,
