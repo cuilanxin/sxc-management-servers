@@ -98,7 +98,7 @@ const login = async (req, res, next) => {
     await User.findOneAndUpdate(
       { username },
       {
-        isOnline: true,
+        // isOnline: true,
         exitAt: forceLogin ? currentDate : user.exitAt,
         loginAt: currentDate,
       },
