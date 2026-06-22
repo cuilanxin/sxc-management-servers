@@ -87,7 +87,7 @@ const updateUser = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
      const { keyword } = req.query;
-      const { username, ...filter } = req.body ||  {};
+      const { name, ...filter } = req.body ||  {};
     
     // 构建查询条件
     let query = { ...filter };
@@ -95,7 +95,7 @@ const getUsers = async (req, res) => {
     // 模糊搜索：标题或描述包含关键词
     if (keyword) {
       query.$or = [
-        { username: { $regex: keyword, $options: 'i' } },        // 标题模糊匹配
+        { name: { $regex: keyword, $options: 'i' } },        // 标题模糊匹配
         // { description: { $regex: taskName, $options: 'i' } }   // 描述模糊匹配
       ];
     }
@@ -158,7 +158,7 @@ const login = async (req, res, next) => {
 
     const user = await User.findOne({ username });
 
-    
+
     if (!user) {
       return res.status(500).json(apiResponse({
         code: 500,
