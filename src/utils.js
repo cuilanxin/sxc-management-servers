@@ -4,7 +4,6 @@ import moment from 'moment-timezone'
 
 export function getCurrentDate() {
   const date = moment().tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss')
-  console.log('cuilanxin datea', date)
   return date
 }
 

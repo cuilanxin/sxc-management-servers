@@ -1,23 +1,31 @@
 const Task = require('../models/Task');
+const User = require('../models/User')
 // import { TASK_STATUS } from '../models/Task'
 // const { TASK_STATUS } = require('../models/Task');
 const { apiResponse, getCurrentDate } = require('../utils')
 const mongoose = require('mongoose');
 
+const getUserInfo = async (username) => {
+  const user = await User.find({ username });
+  return user
+}
 
 // 创建产品
 const createTask = async (req, res) => {
+  const User = require('../models/User');
+
   const username = req.headers['x-username']
-  const id = req.headers['x-id']
   const currentDate = getCurrentDate()
   try {
+    const user = await getUserInfo(username)
     const task = await Task.create({
       ...req.body,
       createdAt: currentDate,
       updatedAt: currentDate,
       id: currentDate.valueOf(),
-      createOwner: username,
-      createOwnerId: id,
+      createOwner: user.name,
+      // taskStatus: 'UNCONFIRMED',
+      createOwnerId: username,
     });
     res.status(200).json(apiResponse({ task }));
   } catch (error) {
@@ -33,6 +41,21 @@ const getTasks = async (req, res) => {
     
     // 构建查询条件
     let query = { ...filter };
+
+
+     
+    // const query = { userId: req.user._id };  // 如果有用户隔离
+    
+    // if (keyword && keyword.trim()) {
+    //   const trimmedKeyword = keyword.trim();
+      
+    //   // 同时匹配 ID（精准）和 name（模糊）
+    //   query.$or = [
+    //     { id: trimmedKeyword },  // 精准匹配 ID（完全相等）
+    //     { name: { $regex: trimmedKeyword, $options: 'i' } }  // 模糊匹配 name
+    //   ];
+    // }
+
     
     // 模糊搜索：标题或描述包含关键词
     if (keyword) {

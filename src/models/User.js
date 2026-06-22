@@ -2,10 +2,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  forceLogin: {
-    type: Boolean,
-    default: null
-  },
   username: {
     type: String,
     required: [true, 'Username is required'],
@@ -17,7 +13,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     sparse: true,
     // required: [true, 'Email is required'],
-    unique: true,
+    // unique: true,
     // lowercase: true
   },
   password: {
@@ -41,6 +37,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  isLogout: {     // （注销）
+    type: Boolean,
+    default: false
+  },
   logoutAt: {     // （注销时间）
     type: String,
     default: null
@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    default: null
+    default: '未命名'
   },
   gender: {
     type: String,
@@ -60,14 +60,25 @@ const userSchema = new mongoose.Schema({
   teamLeader: {
     type: String,
     default: null
-  }
+  },
+  taskNum: {
+    type: String,
+    default: 0
+  },
+  taskNum: {
+    type: String,
+    default: 0
+  },
+  taskNum: {
+    type: String,
+    default: 0
+  },
 }, {
   timestamps: false  // 👈 这行会自动添加 createdAt 和 updatedAt
 });
 
 // 加密密码
 userSchema.pre('save', async function (next) {
-  console.error('cuilanxin 49 next n',next, typeof next)
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   /* next(); */

@@ -19,14 +19,14 @@ const TASK_STATUS = {
   //  * 已指派
   //  */
   // ASSIGNED: 'ASSIGNED',
-  // /**
-  //  * 未确认
-  //  */
-  // UNCONFIRMED: 'UNCONFIRMED',
   /**
-   * 已确认
+   * 未确认
    */
-  CONFIRMED: 'CONFIRMED',
+  UNCONFIRMED: 'UNCONFIRMED',
+  // /**
+  //  * 已确认
+  //  */
+  // CONFIRMED: 'CONFIRMED',
   /**
    * 废弃 abolish
    */
@@ -43,7 +43,7 @@ const taskSchema = new mongoose.Schema({
   },
   taskStatus:{// 任务状态
     type: String, // TASK_STATUS
-    default: TASK_STATUS.UNASSIGNED
+    default: TASK_STATUS.UNCONFIRMED
   },
   createOwner: {
     type: String,
