@@ -9,10 +9,10 @@ const taskSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
-    taskName: { // 
+  taskName: { // 
     type: String,
   },
-  taskStatus:{// 任务状态
+  taskStatus: {// 任务状态
     type: String, // TASK_STATUS
     default: TASK_STATUS.UNCONFIRMED
   },
@@ -30,6 +30,10 @@ const taskSchema = new mongoose.Schema({
   },
   taskInfo: {
     // 任务介绍
+    type: String,
+  },
+  taskProgress: {
+    // 任务进度
     type: String,
   },
   downAt: { // 完成时间
