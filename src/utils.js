@@ -56,3 +56,8 @@ export function apiResponse(params = {}) {
   }
 }
 
+export function userPermission(user) {
+  user.permission === 'admin'
+
+  return 
+}

@@ -152,7 +152,7 @@ const getUsers = async (req, res) => {
     const tasks = await Task.find({})
     // const recipientList = tasks.filter(it => it.recipientId === username)
     // const createOwnerList = tasks.filter(it => it.createOwnerId === username)
-
+    query.permission = { $ne: 'admin' };
     let users = await User.find({ ...query });
     const list = users.map(it => {
       const plainIt = it.toObject();

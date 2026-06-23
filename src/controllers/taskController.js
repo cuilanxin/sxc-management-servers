@@ -16,21 +16,21 @@ const createTask = async (req, res) => {
   const currentDate = getCurrentDate()
   try {
     const user = await getUserInfo(username)
-    if(!user) {
+    if (!user) {
       return res.status(400).json(apiResponse({ code: 400 }));
     }
 
-    if(user.isLogout) {
+    if (user.isLogout) {
       return res.status(400).json(apiResponse({ code: 400, message: '当前账号已注销，请联系管理员' }));
     }
 
     const recipientInfo = await getUserInfo(req.body.recipientId)
 
-    if(!recipientInfo) {
+    if (!recipientInfo) {
       return res.status(400).json(apiResponse({ code: 400 }));
     }
 
-    if(recipientInfo.isLogout) {
+    if (recipientInfo.isLogout) {
       return res.status(400).json(apiResponse({ code: 400, message: '当前接收人账号已注销，请联系管理员' }));
     }
 
@@ -52,15 +52,19 @@ const createTask = async (req, res) => {
 // 获取所有产品
 const getTasks = async (req, res) => {
   try {
-      const { taskName, createdAt, downAt, deadlineAt, ...filter} = req.body ||  {};
-    
+    const username = req.headers['x-username']
+
+    const user = await getUserInfo(username)
+
+    const { taskName, createdAt, downAt, deadlineAt, ...filter } = req.body || {};
+
     // 构建查询条件
     let query = { ...filter };
 
-        // 时间范围过滤
+    // 时间范围过滤
     if (createdAt) {
       query.createdAt = {};
-      
+
       if (createdAt[0]) {
         query.createdAt.$gte = createdAt[0];
       }
@@ -71,7 +75,7 @@ const getTasks = async (req, res) => {
 
     if (deadlineAt) {
       query.createdAt = {};
-      
+
       if (deadlineAt[0]) {
         query.deadlineAt.$gte = deadlineAt[0];
       }
@@ -82,7 +86,7 @@ const getTasks = async (req, res) => {
 
     if (downAt) {
       query.createdAt = {};
-      
+
       if (downAt[0]) {
         query.downAt.$gte = downAt[0];
       }
@@ -92,10 +96,21 @@ const getTasks = async (req, res) => {
     }
 
     // 模糊搜索：标题或描述包含关键词
-    if (taskName) {
+    if (user.permission === 'admin') {
       query.$or = [
-        { taskName: { $regex: taskName, $options: 'i' } },        // 标题模糊匹配
-        // { description: { $regex: taskName, $options: 'i' } }   // 描述模糊匹配
+        { taskName: { $regex: taskName || '', $options: 'i' } },        // 标题模糊匹配
+      ];
+    } else {
+
+
+      query.$and = [
+        { $or: [{ taskName: { $regex: taskName || '', $options: 'i' } },] },
+        {
+          $or: [
+            { createOwnerId: username },
+            { recipientId: username },
+          ]
+        }
       ];
     }
 
@@ -133,28 +148,28 @@ const updateTask = async (req, res) => {
   try {
 
     const user = await getUserInfo(username)
-    if(!user) {
+    if (!user) {
       return res.status(400).json(apiResponse({ code: 400 }));
     }
 
-    if(user.isLogout) {
+    if (user.isLogout) {
       return res.status(400).json(apiResponse({ code: 400, message: '当前账号已注销，请联系管理员' }));
     }
 
     const recipientInfo = await getUserInfo(req.body.recipientId)
 
-    if(!recipientInfo) {
+    if (!recipientInfo) {
       return res.status(400).json(apiResponse({ code: 400 }));
     }
 
-    if(recipientInfo.isLogout) {
+    if (recipientInfo.isLogout) {
       return res.status(400).json(apiResponse({ code: 400, message: '当前接收人账号已注销，请联系管理员' }));
     }
 
     const task = await Task.findOneAndUpdate(
       { id: req.body.id },
-      { 
-        ...req.body, 
+      {
+        ...req.body,
         updatedAt: currentDate,
         downAt: req.body.taskStatus === TASK_STATUS.COMPLETED ? currentDate : null
       },
@@ -165,7 +180,7 @@ const updateTask = async (req, res) => {
       return res.status(404).json(apiResponse({ code: 404 }));
     }
 
-    res.json(apiResponse({task}));
+    res.json(apiResponse({ task }));
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -173,12 +188,12 @@ const updateTask = async (req, res) => {
 
 // 删除产品
 const deleteTask = async (req, res) => {
-    const currentDate = getCurrentDate()
+  const currentDate = getCurrentDate()
 
   try {
     const task = await Task.findOneAndUpdate(
       { id: req.body.id },
-      { isDelete: true, updatedAt: currentDate},
+      { isDelete: true, updatedAt: currentDate },
       { new: true, runValidators: true }
     );
 
