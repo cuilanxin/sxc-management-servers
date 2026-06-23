@@ -41,6 +41,8 @@ export function getCurrentDate() {
 const code_message = {
   200: '成功',
   404: 'Resource not found',
+  400: '刷新后重试',
+  500: '刷新后重试',
   503: 'Database is not ready. Please try again later.'
 }
 export function apiResponse(params = {}) {

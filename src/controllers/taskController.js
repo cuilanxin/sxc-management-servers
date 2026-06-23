@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 const getUserInfo = async (username) => {
   const user = await User.find({ username });
-  return user
+  return user?.[0]
 }
 
 // 创建产品
@@ -16,6 +16,24 @@ const createTask = async (req, res) => {
   const currentDate = getCurrentDate()
   try {
     const user = await getUserInfo(username)
+    if(!user) {
+      return res.status(400).json(apiResponse({ code: 400 }));
+    }
+
+    if(user.isLogout) {
+      return res.status(400).json(apiResponse({ code: 400, message: '当前账号已注销，请联系管理员' }));
+    }
+
+    const recipientInfo = await getUserInfo(req.body.recipientId)
+
+    if(!recipientInfo) {
+      return res.status(400).json(apiResponse({ code: 400 }));
+    }
+
+    if(recipientInfo.isLogout) {
+      return res.status(400).json(apiResponse({ code: 400, message: '当前接收人账号已注销，请联系管理员' }));
+    }
+
     const task = await Task.create({
       ...req.body,
       createdAt: currentDate,
@@ -110,8 +128,29 @@ const getTaskById = async (req, res) => {
 // 更新产品
 const updateTask = async (req, res) => {
   const currentDate = getCurrentDate()
+  const username = req.headers['x-username']
 
   try {
+
+    const user = await getUserInfo(username)
+    if(!user) {
+      return res.status(400).json(apiResponse({ code: 400 }));
+    }
+
+    if(user.isLogout) {
+      return res.status(400).json(apiResponse({ code: 400, message: '当前账号已注销，请联系管理员' }));
+    }
+
+    const recipientInfo = await getUserInfo(req.body.recipientId)
+
+    if(!recipientInfo) {
+      return res.status(400).json(apiResponse({ code: 400 }));
+    }
+
+    if(recipientInfo.isLogout) {
+      return res.status(400).json(apiResponse({ code: 400, message: '当前接收人账号已注销，请联系管理员' }));
+    }
+
     const task = await Task.findOneAndUpdate(
       { id: req.body.id },
       { 
@@ -123,7 +162,7 @@ const updateTask = async (req, res) => {
     );
 
     if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json(apiResponse({ code: 404 }));
     }
 
     res.json(apiResponse({task}));

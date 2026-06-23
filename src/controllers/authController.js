@@ -69,8 +69,14 @@ const logoutUser = async (req, res) => {
   const username = req.headers['x-username']
   const currentDate = getCurrentDate()
   try {
+    const currentUser = await User.find({username})
+    if (!currentUser?.[0])  return res.status(400).json(apiResponse({ code: 400 }));
+    if (currentUser?.[0].permission !== 'admin') {
+      return res.status(400).json(apiResponse({ code: 400, message:'当前账号没有此权限' }));
+    }
+
     const user = await User.findOneAndUpdate(
-      { username: username },
+      { username: req.body.username },
       {
         isLogout: true,
         logoutAt: currentDate,
@@ -182,6 +188,28 @@ const deleteUser = async (req, res) => {
       return res.status(404).json(apiResponse({ code: 500, message: '只能删除已注销的账号！' }));
     }
 
+    await Task.findOneAndUpdate(
+      { createOwnerId: username },
+      {
+        createOwnerId: null,
+        createOwner: '此人已注销',
+        updatedAt: currentDate,
+        exitAt: currentDate
+      },
+      { new: true, runValidators: true }
+    )
+
+    await Task.findOneAndUpdate(
+      { recipientId: username },
+      {
+        recipientId: null,
+        recipient: '此人已注销',
+        updatedAt: currentDate,
+        exitAt: currentDate
+      },
+      { new: true, runValidators: true }
+    )
+  
     await User.findOneAndDelete({
       username: username
     });
