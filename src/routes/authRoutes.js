@@ -6,6 +6,7 @@ const {
   updateUser, 
   deleteUser, 
   getUsers, 
+  getUserInfo,
   exitUser 
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
@@ -18,6 +19,7 @@ router.post('/login', login);
 router.post('/getUsers', protect, getUsers);
 router.post('/exitUser', protect, exitUser);
 router.post('/logoutUser', protect, logoutUser);
+router.post('/getUserInfo', protect, getUserInfo);
 
 router.post('/updateUser', protect, updateUser);
 router.post('/deleteUser', protect, deleteUser);

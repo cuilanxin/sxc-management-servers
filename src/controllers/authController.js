@@ -69,10 +69,10 @@ const logoutUser = async (req, res) => {
   const username = req.headers['x-username']
   const currentDate = getCurrentDate()
   try {
-    const currentUser = await User.find({username})
-    if (!currentUser?.[0])  return res.status(400).json(apiResponse({ code: 400 }));
+    const currentUser = await User.find({ username })
+    if (!currentUser?.[0]) return res.status(400).json(apiResponse({ code: 400 }));
     if (currentUser?.[0].permission !== 'admin') {
-      return res.status(400).json(apiResponse({ code: 400, message:'当前账号没有此权限' }));
+      return res.status(400).json(apiResponse({ code: 400, message: '当前账号没有此权限' }));
     }
 
     const user = await User.findOneAndUpdate(
@@ -174,6 +174,22 @@ const getUsers = async (req, res) => {
 };
 
 
+const getUserInfo = async (req, res) => {
+  const username = req.headers['x-username']
+  try {
+    let users = await User.find({ username });
+    const tasks = await Task.find({})
+    const taskInfo = getUserTaskInfo(tasks, username)
+
+    if (!users?.[0]) {
+      return res.status(500).json(apiResponse({ code: 500, message: '查询信息异常请重试' }));
+    }
+    res.json(apiResponse({ usersInfo: {...users[0].toObject(), ...taskInfo } }));
+  } catch (error) {
+    return res.status(500).json(apiResponse({ code: 500, message: error.message }));
+  }
+}
+
 const deleteUser = async (req, res) => {
   try {
     const user = await User.find(
@@ -209,7 +225,7 @@ const deleteUser = async (req, res) => {
       },
       { new: true, runValidators: true }
     )
-  
+
     await User.findOneAndDelete({
       username: username
     });
@@ -355,4 +371,4 @@ const register = async (req, res, next) => {
 };
 
 
-module.exports = { logoutUser, register, login, updateUser, deleteUser, getUsers, exitUser };
+module.exports = { getUserInfo, logoutUser, register, login, updateUser, deleteUser, getUsers, exitUser };
