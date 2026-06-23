@@ -10,34 +10,39 @@ const generateToken = (id) => {
   });
 };
 
-const getUserTaskInfo = async (username) => {
-  const recipientList = await Task.find({ recipientId: username})
-  const createOwnerList = await Task.find({ createOwnerId: username})
+const getUserTaskInfo = (tasks, username) => {
+  const recipientList = tasks.filter(it => it.recipientId === username)
+  const createOwnerList = tasks.filter(it => it.createOwnerId === username)
+  // const recipientList = await Task.find({ recipientId: username })
+  // const createOwnerList = await Task.find({ createOwnerId: username })
 
   let taskUnfinishedNum = 0 // 任务未完成的
   let taskUnConfirmedNum = 0// 任务未确认的
   let taskConfirmedNum = 0 // 任务已完成的
   recipientList.forEach(item => {
     if (item.taskStatus === TASK_STATUS.UNFINISHED) {
-      taskUnfinishedNum+=1
+      taskUnfinishedNum += 1
     }
     if (item.taskStatus === TASK_STATUS.UNCONFIRMED) {
-      taskUnConfirmedNum+=1
+      taskUnConfirmedNum += 1
     }
     if (item.taskStatus === TASK_STATUS.COMPLETED) {
-      taskConfirmedNum+=1
+      taskConfirmedNum += 1
     }
   })
-  return {
+
+  const result = {
     taskNum: recipientList.length + createOwnerList.length,
     taskCreateNum: createOwnerList.length,
     taskUnfinishedNum,
     taskUnConfirmedNum,
     taskConfirmedNum,
   }
+
+  return result
 }
 
-const exitUser = async(req, res) => {
+const exitUser = async (req, res) => {
   const username = req.headers['x-username']
   const currentDate = getCurrentDate()
   try {
@@ -60,7 +65,7 @@ const exitUser = async(req, res) => {
   }
 }
 
-const logoutUser = async(req, res) => {
+const logoutUser = async (req, res) => {
   const username = req.headers['x-username']
   const currentDate = getCurrentDate()
   try {
@@ -113,11 +118,11 @@ const updateUser = async (req, res) => {
 // 获取所有
 const getUsers = async (req, res) => {
   try {
-      const { name, registerAt, ...filter } = req.body ||  {};
-    
+    const { name, registerAt, ...filter } = req.body || {};
+
     // 构建查询条件
     let query = { ...filter };
-    
+
     // 模糊搜索：标题或描述包含关键词
     if (name) {
       query.$or = [
@@ -129,24 +134,33 @@ const getUsers = async (req, res) => {
     // 时间范围过滤
     if (registerAt) {
       query.registerAt = {};
-      
+
       if (registerAt[0]) {
-        query.registerAt.$gte = registerAt[0]+' 00:00:00';
+        query.registerAt.$gte = registerAt[0] + ' 00:00:00';
       }
       if (registerAt[1]) {
-        query.registerAt.$lte = registerAt[1]+' 23:59:59';
+        query.registerAt.$lte = registerAt[1] + ' 23:59:59';
       }
     }
 
+    const tasks = await Task.find({})
+    // const recipientList = tasks.filter(it => it.recipientId === username)
+    // const createOwnerList = tasks.filter(it => it.createOwnerId === username)
+
     let users = await User.find({ ...query });
-    const list = await Promise.all(users.map(async (it)=>{
+    const list = users.map(it => {
       const plainIt = it.toObject();
-      const taskInfo = await getUserTaskInfo(plainIt.username);
-      return {...plainIt, ...taskInfo,  }
-    }))
-    // users = users.map(it=>())
-    console.log('cuilanxin users', list)
-    // : tasks.filter(item => !item.isDelete)
+      return {
+        ...plainIt,
+        ...getUserTaskInfo(tasks, plainIt.username),
+      }
+    })
+    // const list = await Promise.all(users.map(async (it) => {
+    //   const plainIt = it.toObject();
+    //   const taskInfo = await getUserTaskInfo(plainIt.username);
+    //   return { ...plainIt, ...taskInfo, }
+    // }))
+
     res.json(apiResponse({ users: list }));
   } catch (error) {
     res.status(500).json(apiResponse({ code: 500, message: error.message }));
@@ -163,11 +177,11 @@ const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json(apiResponse({ code: 404 }));
     }
-  
-    if(!user.isLogout) {
+
+    if (!user.isLogout) {
       return res.status(404).json(apiResponse({ code: 500, message: '只能删除已注销的账号！' }));
     }
-  
+
     await User.findOneAndDelete({
       username: username
     });
@@ -219,7 +233,7 @@ const login = async (req, res, next) => {
       }));
     }
 
-    if(user.isLogout) {
+    if (user.isLogout) {
       return res.status(500).json(apiResponse({
         code: 500,
         message: '账号已注销'
